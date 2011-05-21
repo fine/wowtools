@@ -5,18 +5,11 @@ using WowTools.Core;
 namespace WoWPacketViewer.Parsers.Warden
 {
     [Parser(OpCodes.CMSG_WARDEN_DATA)]
-    internal class CmsgWardenData : Parser
+    class CmsgWardenData : Parser
     {
-        public CmsgWardenData(Packet packet)
-            : base(packet)
+        public override void Parse()
         {
-        }
-
-        public override string Parse()
-        {
-            BinaryReader gr = Packet.CreateReader();
-
-            byte wardenOpcode = gr.ReadByte();
+            byte wardenOpcode = Reader.ReadByte();
             //AppendFormatLine("C->S Warden Opcode: {0:X2}", wardenOpcode);
 
             switch (wardenOpcode)
@@ -30,11 +23,11 @@ namespace WoWPacketViewer.Parsers.Warden
                     AppendLine();
                     break;
                 case 0x02:
-                    Parse_CHEAT_CHECKS_RESULTS(gr);
+                    Parse_CHEAT_CHECKS_RESULTS();
                     break;
                 case 0x04:
-                    byte[] hash = gr.ReadBytes(20); // SHA1 hash of tranformed seed
-                    AppendFormatLine("SHA1: 0x{0}", Utility.ByteArrayToHexString(hash));
+                    byte[] hash = Reader.ReadBytes(20); // SHA1 hash of tranformed seed
+                    AppendFormatLine("SHA1: 0x{0}", hash.ToHexString());
                     AppendLine();
                     break;
                 default:
@@ -42,17 +35,13 @@ namespace WoWPacketViewer.Parsers.Warden
                     AppendLine();
                     break;
             }
-
-            CheckPacket(gr);
-
-            return GetParsedString();
         }
 
-        private void Parse_CHEAT_CHECKS_RESULTS(BinaryReader gr)
+        private void Parse_CHEAT_CHECKS_RESULTS()
         {
-            var bufLen = gr.ReadUInt16();
-            var checkSum = gr.ReadUInt32();
-            var result = gr.ReadBytes(bufLen);
+            var bufLen = Reader.ReadUInt16();
+            var checkSum = Reader.ReadUInt32();
+            var result = Reader.ReadBytes(bufLen);
             //AppendFormatLine("Cheat check result:");
             //AppendFormatLine("Len: {0}", bufLen);
             //AppendFormatLine("Checksum: 0x{0:X8} {1}", checkSum, WardenData.ValidateCheckSum(checkSum, result));
@@ -158,7 +147,7 @@ namespace WoWPacketViewer.Parsers.Warden
             if(res == 0)
             {
                 var sha1 = reader.ReadBytes(20);
-                AppendFormatLine("MPQ SHA1: {0}", Utility.ByteArrayToHexString(sha1));
+                AppendFormatLine("MPQ SHA1: {0}", sha1.ToHexString());
             }
 
             //AppendFormatLine("====== MPQ_CHECK result END ======");
@@ -182,7 +171,7 @@ namespace WoWPacketViewer.Parsers.Warden
             if (res == 0)
             {
                 var bytes = reader.ReadBytes(check.m_length);
-                AppendFormatLine("MEM Bytes: {0}", Utility.ByteArrayToHexString(bytes));
+                AppendFormatLine("MEM Bytes: {0}", bytes.ToHexString());
             }
             //AppendFormatLine("====== MEM_CHECK result END ======");
             //AppendLine();
